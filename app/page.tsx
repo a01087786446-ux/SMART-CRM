@@ -1,5 +1,5 @@
 "use client";
-
+import { loadCrmData, saveCrmData } from "../lib/storage/crm-storage";
 import { useEffect, useState } from "react";
 import { createWorker } from "tesseract.js";
 
@@ -157,32 +157,29 @@ const [ocrLoading, setOcrLoading] = useState(false);
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("smart-crm-customers");
-      const done = localStorage.getItem("smart-crm-auto-followup-done");
-      if (done) setAutoDone(JSON.parse(done));
-      if (saved) {
-        setCustomers(JSON.parse(saved));
-      }
+      const saved = loadCrmData<Customer[]>("customers");
+      const done = loadCrmData<Record<string, boolean>>("autoFollowupDone");
+if (done) setAutoDone(done);
+if (saved) {
+  setCustomers(saved);
+}
     } catch {
       alert("저장된 고객정보를 읽지 못했습니다.");
     }
     setLoaded(true);
   }, []);
 
-  useEffect(() => {
-    if (loaded) {
-      localStorage.setItem(
-        "smart-crm-customers",
-        JSON.stringify(customers)
-      );
-    }
-  }, [customers, loaded]);
+useEffect(() => {
+  if (loaded) {
+    saveCrmData("customers", customers);
+  }
+}, [customers, loaded]);
 
-  useEffect(() => {
-    if (loaded) {
-      localStorage.setItem("smart-crm-auto-followup-done", JSON.stringify(autoDone));
-    }
-  }, [autoDone, loaded]);
+useEffect(() => {
+  if (loaded) {
+    saveCrmData("autoFollowupDone", autoDone);
+  }
+}, [autoDone, loaded]);
 
   function toggleAutoTask(task: AutoTask) {
     const isCurrentlyDone = !!autoDone[task.key];
