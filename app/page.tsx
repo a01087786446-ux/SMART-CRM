@@ -344,10 +344,9 @@ const [ocrLoading, setOcrLoading] = useState(false);
       if (ocrFile.type === "application/pdf") {
         setOcrProgress("PDF 페이지를 이미지로 변환 중...");
         const pdfjs = await import("pdfjs-dist");
-        pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-          "pdfjs-dist/build/pdf.worker.min.mjs",
-          import.meta.url
-        ).toString();
+        
+pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+
         const bytes = new Uint8Array(await ocrFile.arrayBuffer());
         const pdf = await pdfjs.getDocument({ data: bytes }).promise;
         if (pdf.numPages > 10) {
