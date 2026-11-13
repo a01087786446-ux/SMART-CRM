@@ -122,12 +122,14 @@ export async function GET(request: NextRequest) {
     pdfjs.GlobalWorkerOptions.workerSrc =
       pathToFileURL(workerPath).href;
 
-    const loadingTask = pdfjs.getDocument({
-      data: new Uint8Array(buffer),
-      useSystemFonts: true,
-      isEvalSupported: false,
-      disableFontFace: true,
-    });
+const pdfOptions = {
+  data: new Uint8Array(buffer),
+  useSystemFonts: true,
+  isEvalSupported: false,
+  disableFontFace: true,
+};
+
+const loadingTask = pdfjs.getDocument(pdfOptions);
 
     const pdf = await loadingTask.promise;
 
@@ -180,11 +182,9 @@ export async function GET(request: NextRequest) {
           },
         }
       );
-    } finally {
-      if (typeof pdf.destroy === "function") {
-        await pdf.destroy();
-      }
-    }
+} finally {
+  await loadingTask.destroy();
+}
   } catch (error) {
     console.error(
       "PDF 이미지 변환 오류:",

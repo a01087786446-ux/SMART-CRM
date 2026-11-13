@@ -2,6 +2,7 @@
 import { loadCrmData, saveCrmData } from "../lib/storage/crm-storage";
 import { useEffect, useState } from "react";
 import { createWorker } from "tesseract.js";
+import DriveFilesPanel from "./components/DriveFilesPanel";
 
 type History = {
   id: number;
@@ -225,6 +226,89 @@ useEffect(() => {
     setForm({ ...emptyCustomer });
     alert("고객이 등록되었습니다.");
   }
+
+function registerReviewedCustomer(draft: {
+  name: string;
+  phone: string;
+  carrier: string;
+  device: string;
+  plan: string;
+  openDate: string;
+  endDate: string;
+}) {
+  if (!loaded) {
+    alert("고객정보를 불러오는 중입니다.");
+    return;
+  }
+
+  const name = draft.name.trim();
+  const phone = draft.phone.replace(/\D/g, "");
+  const openDate = draft.openDate.trim();
+
+  if (!name || !/^\d{10,11}$/.test(phone)) {
+    alert("고객명과 올바른 전화번호를 확인해주세요.");
+    return;
+  }
+
+  const duplicate = customers.some(
+    (customer) =>
+      customer.phone.replace(/\D/g, "") === phone
+  );
+
+  if (duplicate) {
+    alert("이미 등록된 전화번호입니다. 중복 등록을 중단합니다.");
+    return;
+  }
+
+  const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(openDate);
+
+  if (!parts) {
+    alert("개통일을 YYYY-MM-DD 형식으로 입력해주세요.");
+    return;
+  }
+
+  const date = new Date(
+    Date.UTC(Number(parts[1]), Number(parts[2]) - 1, Number(parts[3]))
+  );
+
+  if (date.toISOString().slice(0, 10) !== openDate) {
+    alert("올바른 개통일을 입력해주세요.");
+    return;
+  }
+
+  date.setUTCDate(date.getUTCDate() + 7);
+  const followupDate = date.toISOString().slice(0, 10);
+
+  const endDate =
+    draft.endDate.trim() || calculateContractEnd(openDate);
+
+  if (
+    !window.confirm(
+      `${name} 고객을 등록하시겠습니까?\n사후관리 예정일: ${followupDate}`
+    )
+  ) {
+    return;
+  }
+
+  const customer: Customer = {
+    id: Math.max(Date.now(), ...customers.map((c) => c.id + 1)),
+    name,
+    phone,
+    carrier: draft.carrier.trim() || "SKT",
+    device: draft.device.trim(),
+    plan: draft.plan.trim(),
+    openDate,
+    endDate,
+    status: "개통완료",
+    history: [],
+    followupDate,
+    followupStatus: "연락예정",
+  };
+
+  setCustomers((previous) => [customer, ...previous]);
+  setTab("고객관리");
+  alert("고객 등록이 완료되었습니다.");
+}
 
   function openDetail(c: Customer) {
     setSelected(c);
@@ -497,10 +581,30 @@ pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
       ? "bg-blue-600 text-white"
       : "bg-white"
   }`}>
-  AI 신청서 OCR
+   AI 신청서 OCR
+</button>
+
+<button
+  type="button"
+  onClick={() => setTab("신청서목록")}
+  className={`px-5 py-3 rounded-lg font-bold ${
+    tab === "신청서목록"
+      ? "bg-blue-600 text-white"
+      : "bg-white"
+  }`}
+>
+  Google Drive 신청서 목록
 </button>
         </div>
+{tab === "신청서목록" && (
+  <section className="bg-white rounded-xl p-6 shadow-sm mb-8">
+    <h3 className="text-xl font-bold mb-4">
+      Google Drive 신청서 목록
+    </h3>
 
+    <DriveFilesPanel onRegister={registerReviewedCustomer} />
+  </section>
+)}
 {tab === "OCR" && (
   <section className="bg-white rounded-xl p-6 shadow-sm mb-8">
     <h3 className="text-xl font-bold mb-4">

@@ -125,14 +125,15 @@ export async function GET(request: NextRequest) {
     pdfjs.GlobalWorkerOptions.workerSrc =
       pathToFileURL(workerPath).href;
 
-    const loadingTask = pdfjs.getDocument({
-      data: new Uint8Array(buffer),
-      useSystemFonts: true,
-      isEvalSupported: false,
-      disableFontFace: true,
-    });
+const pdfOptions = {
+  data: new Uint8Array(buffer),
+  useSystemFonts: true,
+  isEvalSupported: false,
+  disableFontFace: true,
+};
 
-    const pdf = await loadingTask.promise;
+const loadingTask = pdfjs.getDocument(pdfOptions);
+const pdf = await loadingTask.promise;
 
     try {
 
@@ -245,11 +246,9 @@ return NextResponse.json({
         await worker.terminate();
       }
 
-    } finally {
-      if (typeof pdf.destroy === "function") {
-        await pdf.destroy();
-      }
-    }
+} finally {
+  await loadingTask.destroy();
+}
   } catch (error) {
     console.error(
       "스캔 PDF OCR 오류:",

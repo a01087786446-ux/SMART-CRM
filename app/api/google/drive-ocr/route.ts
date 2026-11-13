@@ -126,19 +126,20 @@ const workerPath = path.join(
 pdfjs.GlobalWorkerOptions.workerSrc =
   pathToFileURL(workerPath).href;
 
-    const pdf = await pdfjs.getDocument({
-      data: new Uint8Array(buffer),
-      useSystemFonts: true,
-      isEvalSupported: false,
-      disableFontFace: true,
-    }).promise;
+const pdfOptions = {
+  data: new Uint8Array(buffer),
+  useSystemFonts: true,
+  isEvalSupported: false,
+  disableFontFace: true,
+};
+
+const loadingTask = pdfjs.getDocument(pdfOptions);
+const pdf = await loadingTask.promise;
 
     const pageCount = pdf.numPages;
 
     if (pageCount > 20) {
-      if (typeof pdf.destroy === "function") {
-  await pdf.destroy();
-}
+      await loadingTask.destroy();
 
       return NextResponse.json(
         { success: false, error: "20페이지 이하 PDF만 처리할 수 있습니다." },
@@ -160,11 +161,9 @@ pdfjs.GlobalWorkerOptions.workerSrc =
         pageTexts.push(text);
         page.cleanup();
       }
-    } finally {
-      if (typeof pdf.destroy === "function") {
-  await pdf.destroy();
+} finally {
+  await loadingTask.destroy();
 }
-    }
 
     const extractedText = pageTexts.join("\n\n");
 

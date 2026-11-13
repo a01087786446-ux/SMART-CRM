@@ -74,10 +74,17 @@ export async function GET() {
       files,
     });
   } catch (error) {
-    console.error(
-      "Google Drive 파일 목록 조회 실패:",
-      error instanceof Error ? error.name : "UnknownError"
-    );
+    const detail = error as {
+  code?: string | number;
+  status?: number;
+  response?: { status?: number };
+};
+
+console.error("Google Drive 파일 목록 조회 실패:", {
+  name: error instanceof Error ? error.name : "UnknownError",
+  code: detail.code ?? null,
+  status: detail.response?.status ?? detail.status ?? null,
+});
 
     return NextResponse.json(
       {

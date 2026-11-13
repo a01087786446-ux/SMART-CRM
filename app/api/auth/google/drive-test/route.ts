@@ -1,7 +1,7 @@
 
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
-import { loadGoogleTokens } from "../../../../lib/google-token";
+import { loadGoogleTokens } from "../../../../../lib/google-token";
 
 export const runtime = "nodejs";
 
