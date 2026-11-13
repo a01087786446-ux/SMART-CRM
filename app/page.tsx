@@ -221,10 +221,7 @@ useEffect(() => {
       alert("고객명과 연락처를 입력하세요.");
       return;
     }
-    const customer: Customer = { ...form, id: Date.now(), history: [] };
-    setCustomers(prev => [customer, ...prev]);
-    setForm({ ...emptyCustomer });
-    alert("고객이 등록되었습니다.");
+registerReviewedCustomer(form);
   }
 
 function registerReviewedCustomer(draft: {
@@ -305,9 +302,10 @@ function registerReviewedCustomer(draft: {
     followupStatus: "연락예정",
   };
 
-  setCustomers((previous) => [customer, ...previous]);
-  setTab("고객관리");
-  alert("고객 등록이 완료되었습니다.");
+setCustomers((previous) => [customer, ...previous]);
+setForm({ ...emptyCustomer });
+setTab("고객관리");
+alert("고객 등록이 완료되었습니다.");
 }
 
   function openDetail(c: Customer) {
